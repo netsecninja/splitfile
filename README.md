@@ -1,3 +1,5 @@
+Requires: Python3
+
 usage: splitfile.py [-h] file lines
 
 Splits text file by specified line count
