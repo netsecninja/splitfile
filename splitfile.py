@@ -3,6 +3,8 @@
 
 # Imports
 import argparse
+from os import path
+from math import ceil
 
 # Globals
 
@@ -18,7 +20,6 @@ def splitFile(file, splitmax):
         data = f.readlines()
 
     # Parse out path and filename
-    from os import path
     filepath, filename = path.split(file)
     basename, ext = path.splitext(filename)
     if filepath == '':
@@ -27,18 +28,29 @@ def splitFile(file, splitmax):
         fileprefix = f'{filepath}/{basename}'
 
     # Calculate and create splits
-    splits = int(len(data)/splitmax) + 1 # Count of splits rounded up
-    splitstart = 0 # Starting slice for data
-    splitstop = splitmax # Stopping slice for data
+    if ext == '.csv':
+        csvheader = data[0]
+        splitstart = 1 # Starting slice for data excluding header
+        splitmax -= 1 # Remove header from split count
+        splitstop = splitmax + 1 # Stopping slice for data
+    else:
+        csvheader = ''
+        splitstart = 0 # Starting slice for data
+        splitstop = splitmax  # Stopping slice for data
+    splits = ceil(len(data) / splitmax)  # Count of splits always rounded up
     splitnum = 1 # Used for filename
 
     while splitnum <= splits:
+        if data[splitstart:splitstop] == []:
+            break
         newfilename = f'{fileprefix}-{splitnum}{ext}'
         with open(newfilename, 'w') as f:
+            if csvheader:
+                f.write(csvheader)
             for line in data[splitstart:splitstop]:
                 f.write(line)
-        splitstart = splitstop + 1 # Reset start where we ended
-        splitstop = splitstop + splitmax + 1 # Set next splitmax (added to itself)
+        splitstart = splitstop # Reset start where we ended
+        splitstop = splitstop + splitmax # Set next splitmax (added to itself)
         splitnum += 1 # Increment filename split number
         
 # Main
